@@ -8,6 +8,7 @@ const Background: React.FC<{ children: React.ReactNode }> = ({ children }) => (
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
+         //   backgroundColor: "rgba(26, 26, 26, 1)",
             background: `linear-gradient(140deg, #0000ff 0%, #007cf0 40%, #f057b7 85%) `,
         }}
     >{children}</Box>

@@ -3,18 +3,23 @@ import Box from "@mui/material/Box"
 import Typography from "@mui/material/Typography"
 import React, { useState } from "react"
 import { useMutation } from "@tanstack/react-query"
-import { login, signUp } from "../utils/APIUtils"
-import { AuthCard } from './auth/AuthCard'
-import { AuthTextField } from './auth/AuthTextField'
-import { AuthButton } from './auth/AuthButton'
-import { AuthToggleLink } from './auth/AuthToggleLink'
+import { login, signUp } from "../../utils/APIUtils.ts"
+import { AuthTextField } from "./AuthTextField.tsx"
+import { AuthCard } from "./AuthCard.tsx"
+import { AuthButton } from "./AuthButton.tsx"
+import { AuthToggleLink } from "./AuthToggleLink.tsx"
+import { Alert } from "@mui/material"
 
 export const Auth: React.FC = () => {
     const [isSignUp, setIsSignUp] = useState(false)
     const [signInForm, setSignInForm] = useState({ email: "", password: "" })
     const [signUpForm, setSignUpForm] = useState({ name: "", email: "", password: "" })
+    const [error, setError] = useState<string | null>(null)
 
-    const handleToggle = () => setIsSignUp(!isSignUp)
+    const handleToggle = () => {
+        setIsSignUp(!isSignUp)
+        setError(null)
+    }
 
     const signInColor = "rgba(0, 124, 240, 0.8)"
     const signUpColor = "rgba(0, 240, 124, 0.8)"
@@ -22,19 +27,16 @@ export const Auth: React.FC = () => {
     const loginMutation = useMutation({
         mutationFn: () => login(signInForm.email, signInForm.password),
         onSuccess: (data) => {
-            localStorage.setItem("token", data.access_token)
-            console.log("Login success", data)
+            sessionStorage.setItem("token", data.accessToken)
+            window.location.reload()
         },
-        onError: (error: Error) => { alert(error.message) }
+        onError: (error: Error) => setError(error.message)
     })
 
     const signupMutation = useMutation({
         mutationFn: () => signUp(signUpForm.name, signUpForm.email, signUpForm.password),
-        onSuccess: (data) => {
-            console.log("Signup success", data)
-            setIsSignUp(false)
-        },
-        onError: (error: Error) => { alert(error.message) }
+        onSuccess: () => setIsSignUp(false),
+        onError: (error: Error) => setError(error.message)
     })
 
     return (
@@ -50,71 +52,81 @@ export const Auth: React.FC = () => {
                         transform: isSignUp ? "rotateY(180deg)" : "rotateY(0deg)",
                     }}
                 >
-                    <AuthCard>
-                        <Typography variant="h3" component="h1" sx={{ mb: 4, color: "white" }}>
+                    <AuthCard isFlipped={false}>
+                        <Typography variant="h4" component="h1" gutterBottom>
                             Sign In
                         </Typography>
 
+                        {error && !isSignUp && (
+                            <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
+                                {error}
+                            </Alert>
+                        )}
+
                         <AuthTextField
-                            id="signin-email"
                             label="Email"
+                            type="email"
                             value={signInForm.email}
-                            onChange={(e) => setSignInForm({ ...signInForm, email: e.target.value })}
+                            onChange={e => setSignInForm({ ...signInForm, email: e.target.value })}
                         />
                         <AuthTextField
-                            id="signin-password"
                             label="Password"
                             type="password"
                             value={signInForm.password}
-                            onChange={(e) => setSignInForm({ ...signInForm, password: e.target.value })}
+                            onChange={e => setSignInForm({ ...signInForm, password: e.target.value })}
                         />
 
                         <AuthButton
-                            color={signInColor}
                             onClick={() => loginMutation.mutate()}
+                            loading={loginMutation.isPending}
+                            bgColor={signInColor}
                         >
-                            {loginMutation.isPending ? "Signing In..." : "Sign In"}
+                            Sign In
                         </AuthButton>
 
-                        <AuthToggleLink color={signInColor} onClick={handleToggle}>
+                        <AuthToggleLink onClick={handleToggle}>
                             Don't have an account? Sign up
                         </AuthToggleLink>
                     </AuthCard>
 
-                    <AuthCard isFlipped>
-                        <Typography variant="h3" component="h1" sx={{ mb: 3, color: "white", fontWeight: "bold" }}>
-                            Sign Up
+                    <AuthCard isFlipped={true}>
+                        <Typography variant="h4" component="h1" gutterBottom>
+                            Create Account
                         </Typography>
 
+                        {error && isSignUp && (
+                            <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
+                                {error}
+                            </Alert>
+                        )}
+
                         <AuthTextField
-                            id="signup-name"
                             label="Name"
                             value={signUpForm.name}
-                            onChange={(e) => setSignUpForm({ ...signUpForm, name: e.target.value })}
+                            onChange={e => setSignUpForm({ ...signUpForm, name: e.target.value })}
                         />
                         <AuthTextField
-                            id="signup-email"
                             label="Email"
                             type="email"
                             value={signUpForm.email}
-                            onChange={(e) => setSignUpForm({ ...signUpForm, email: e.target.value })}
+                            onChange={e => setSignUpForm({ ...signUpForm, email: e.target.value })}
                         />
                         <AuthTextField
-                            id="signup-password"
                             label="Password"
                             type="password"
                             value={signUpForm.password}
-                            onChange={(e) => setSignUpForm({ ...signUpForm, password: e.target.value })}
+                            onChange={e => setSignUpForm({ ...signUpForm, password: e.target.value })}
                         />
 
                         <AuthButton
-                            color={signUpColor}
                             onClick={() => signupMutation.mutate()}
+                            loading={signupMutation.isPending}
+                            bgColor={signUpColor}
                         >
-                            {signupMutation.isPending ? "Creating..." : "Create Account"}
+                            Sign Up
                         </AuthButton>
 
-                        <AuthToggleLink color={signUpColor} onClick={handleToggle}>
+                        <AuthToggleLink onClick={handleToggle}>
                             Already have an account? Sign in
                         </AuthToggleLink>
                     </AuthCard>
